@@ -32,6 +32,7 @@ namespace IsMyLolAccountOccupiedFFS
             Shown += FormLoaded;
             
             trayMenu = new ContextMenu();
+            trayMenu.MenuItems.Add("Lol Nexus", OnNexus);
             trayMenu.MenuItems.Add("Exit", OnExit);
 
             trayIcon = new NotifyIcon();
@@ -64,8 +65,9 @@ namespace IsMyLolAccountOccupiedFFS
             while (running)
             {
                 Console.WriteLine("Woo");
-                bool result = pingChampion();
-                if (!result)
+                LolNexusResult result = pingChampion();
+                if (result == null) continue;
+                if (!result.successful)
                 {
                     trayIcon.Icon = positiveIcon;
                 }
@@ -80,13 +82,25 @@ namespace IsMyLolAccountOccupiedFFS
             Application.Exit();
         }
 
-        private bool pingChampion()
+        private LolNexusResult pingChampion()
         {
+            LolNexusResult result = null;
+            try {
+                XmlSerializer serializer = new XmlSerializer(typeof(LolNexusResult));
+                XmlReader xmlReader = XmlReader.Create(host + url);
+                result = (LolNexusResult)serializer.Deserialize(xmlReader);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+            }
 
-            XmlSerializer serializer = new XmlSerializer(typeof(LolNexusResult));
-            XmlReader xmlReader = XmlReader.Create(host + url);
-            LolNexusResult result = (LolNexusResult)serializer.Deserialize(xmlReader);
-            return result.successful;
+            return result;
+        }
+
+        private void OnNexus(object sender, EventArgs e)
+        {
+            System.Diagnostics.Process.Start("http://www.lolnexus.com/EUW/search?name=krindle&region=euw");
         }
 
         private void OnExit(object sender, EventArgs e)
